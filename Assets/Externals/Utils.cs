@@ -157,6 +157,30 @@ public static class VectorExtensions
         );
         return;
     }
+
+    public static Vector3 GetLargestAbsDimension(ref this Vector3 vec)
+    {
+        Vector3 absDelta = new Vector3(
+        Mathf.Abs(vec.x),
+        Mathf.Abs(vec.y),
+        Mathf.Abs(vec.z)
+        );
+
+        if (absDelta.x >= absDelta.y && absDelta.x >= absDelta.z)
+        {
+            return new Vector3(1, 0, 0);
+        }
+        else if (absDelta.y >= absDelta.x && absDelta.y >= absDelta.z)
+        {
+            return new Vector3(0, 1, 0);
+        }
+        else if (absDelta.z >= absDelta.x && absDelta.z >= absDelta.y)
+        {
+            return new Vector3(0, 0, 1);
+        }
+        Debug.LogError("No best coordinate");
+        return new Vector3(0, 0, 0);
+    }
 }
 
 public static class RandomUtils

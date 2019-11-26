@@ -11,4 +11,22 @@ public class InGameUIController : MonoBehaviour
     public void SetTimerText(System.TimeSpan text) {
         timerIndicator.text = text.ToShortForm();
     }
+
+    #region Button Actions
+    public void ToggleTimer()
+    {
+        PerSessionData.ShowTimer = !PerSessionData.ShowTimer;
+        this.timerIndicator.gameObject.SetActive(PerSessionData.ShowTimer);
+    }
+
+    public void ShowPauseMenu()
+    {
+
+    }
+
+    public void HidePauseMenu()
+    {
+
+    }
+    #endregion
 }

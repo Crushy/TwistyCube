@@ -58,5 +58,11 @@ public class StagedUI : MonoBehaviour
         }
     }
 
+    public void ResetStages()
+    {
+        this.currentStage = 0;
+        ChangeActiveStage(this.stages[0]);
+    }
+
     
 }

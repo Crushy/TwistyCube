@@ -18,9 +18,9 @@ public enum CubeRotationAxis {
     ZAxis
 }
 
-public struct CubeRotation{
+public struct RubikCubeRotation{
     public CubeRotationAxis RotationAxis;
-    public int pivotIndex;
+    public int PivotIndex;
     ///<summary>If true, it's either rotating up or left depending on the rotation axis</summary>
-    public bool direction;
+    public bool Direction;
 }
