@@ -39,7 +39,8 @@ public static class SaveGameSystem
         Debug.Log(PlayerPrefs.GetString(cubeDataKey));
     }
 
-    public static void LoadGameState(out SerializableCubeData cubeData, out System.TimeSpan timeTakenSoFar)
+    //Returns true if saved data was able to be loaded
+    public static bool LoadGameState(out SerializableCubeData cubeData, out System.TimeSpan timeTakenSoFar)
     {
         
 
@@ -48,7 +49,7 @@ public static class SaveGameSystem
             Debug.LogError("Serialized data not found");
             cubeData = default;
             timeTakenSoFar = default;
-            return;
+            return false;
         }
 
         //Extract and unpack the cube grid data
@@ -60,7 +61,7 @@ public static class SaveGameSystem
         string timeAsDoubleString = PlayerPrefs.GetString(timeDataKey, "");
         timeTakenSoFar = System.TimeSpan.FromSeconds(double.Parse(timeAsDoubleString));
         Debug.Log(timeTakenSoFar);
-
+        return true;
 
     }
 }

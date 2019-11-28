@@ -28,9 +28,10 @@ public class GameManager : MonoBehaviour
     private MagicCube magicCube;
     private Transform cubeHighlighter;
 
-    //TODO: remove
-    public PerSessionData.GameModes gameMode;
     #pragma warning restore 649
+
+    //TODO: remove
+    //public PerSessionData.GameModes gameMode;
 
     //Custom event used by the in-game timer
     [System.Serializable]
@@ -71,13 +72,14 @@ public class GameManager : MonoBehaviour
         Application.targetFrameRate = 60;
         Input.simulateMouseWithTouches = false;
 
+        this.ingameUI.FadeIn();
 
         this.cubeHighlighter = GameObject.Instantiate(this.HighlightCubePrefab);
         this.cubeHighlighter.gameObject.SetActive(false);
 
         System.TimeSpan accumulatedTime = System.TimeSpan.Zero;
 
-        switch (gameMode)
+        switch (PerSessionData.newGameMode)
         {
             case PerSessionData.GameModes.Resume:
                 Debug.Log("Loading cube from playerprefs");

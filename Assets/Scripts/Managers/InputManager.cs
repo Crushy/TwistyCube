@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class InputManager : MonoBehaviour
 {
@@ -43,10 +44,10 @@ public class InputManager : MonoBehaviour
         //    gameManager.RandomRotation();
         //}
 
-        if (Input.GetKeyDown(KeyCode.U))
-        {
-            gameManager.UndoLastRotation();
-        }
+        //if (Input.GetKeyDown(KeyCode.U))
+        //{
+        //    gameManager.UndoLastRotation();
+        //}
 
         orbitingCamera.AddZoomMouseScrollInput(-Input.GetAxis("Mouse ScrollWheel"));
 
@@ -83,6 +84,9 @@ public class InputManager : MonoBehaviour
 
             }
         }
+        
+
+
 
         if (Input.touchCount == 1)
         {
@@ -112,10 +116,47 @@ public class InputManager : MonoBehaviour
             orbitingCamera.AddZoomInputPinch(deltaMagnitudeDiff);
         }
 
+        
+        foreach (Touch touch in Input.touches)
+        {
+            HandleTouch(touch.fingerId, Camera.main.ScreenToWorldPoint(touch.position), touch.phase);
+        }
 
+        //Simulate touch events from mouse events
+        if (Input.touchCount == 0)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                HandleTouch(0, Camera.main.ScreenToWorldPoint(Input.mousePosition), TouchPhase.Began);
+            }
+            if (Input.GetMouseButton(0))
+            {
+                HandleTouch(0, Camera.main.ScreenToWorldPoint(Input.mousePosition), TouchPhase.Moved);
+            }
+            if (Input.GetMouseButtonUp(0))
+            {
+                HandleTouch(0, Camera.main.ScreenToWorldPoint(Input.mousePosition), TouchPhase.Ended);
+            }
+        }
     }
 
-    public void DisplayWinScreen(System.TimeSpan timeTaken)
+    private void HandleTouch(int touchFingerId, Vector3 touchPosition, TouchPhase touchPhase)
+    {
+        switch (touchPhase)
+        {
+            case TouchPhase.Began:
+                // TODO
+                break;
+            case TouchPhase.Moved:
+                // TODO
+                break;
+            case TouchPhase.Ended:
+                // TODO
+                break;
+        }
+    }
+
+public void DisplayWinScreen(System.TimeSpan timeTaken)
     {
         this.ingameUi.ShowWinScreen(timeTaken);
         this.inputLock++;
@@ -143,6 +184,17 @@ public class InputManager : MonoBehaviour
     {
         this.ingameUi.CloseWinScreen();
         this.inputLock--;
+    }
+
+    public void UI_BackToTitle()
+    {
+        SceneManager.LoadScene("Title");
+    }
+
+    public void UI_RestartGame()
+    {
+        PerSessionData.newGameMode = PerSessionData.GameModes.NewGame;
+        SceneManager.LoadScene("Game");
     }
     #endregion
 }
