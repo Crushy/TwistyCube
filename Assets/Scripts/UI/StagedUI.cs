@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+
+/// <summary>
+/// A UI monobehaviour to handle different states in a UI element
+/// </summary>
 public class StagedUI : MonoBehaviour
 {
     #pragma warning disable 649

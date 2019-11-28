@@ -30,9 +30,6 @@ public class GameManager : MonoBehaviour
 
     #pragma warning restore 649
 
-    //TODO: remove
-    //public PerSessionData.GameModes gameMode;
-
     //Custom event used by the in-game timer
     [System.Serializable]
     public class MyStringEvent : UnityEvent<System.TimeSpan>

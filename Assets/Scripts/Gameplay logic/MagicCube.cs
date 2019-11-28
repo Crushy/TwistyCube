@@ -12,10 +12,7 @@ public class MagicCube
     private int gameSize;
     public int CubeSize
     {
-        get
-        {
-            return gameSize;
-        }
+        get { return gameSize; }
     }
 
     private float individualCubeSize;
@@ -153,7 +150,8 @@ public class MagicCube
         targetQuaternion = Quaternion.AngleAxis(rotationDirection * 90, axis);
 
         // I will now parent all the cubes to be rotated into a new temporary GameObject
-        // So they can be rotate together
+        // So they can be rotated together
+
         // You can do this with pure math
         // but this way makes the code simpler for not much overhead
         // and allows us to animate all the cubes at once with minimal effort
@@ -167,7 +165,10 @@ public class MagicCube
 
 
         Quaternion startRotation = rotationalAidGO.transform.rotation;
-        //Vector3 startPosition = cube.transform.position;
+        
+        //You can do really cool things here in the pivoting action
+        //to animate the rotation, all that matters is that evertything
+        //is in the right place for the final action
         return new PivotRotationActions()
         {
             startAction = () =>
@@ -184,9 +185,7 @@ public class MagicCube
 
             finalAction = () =>
             {
-                //Debug.Log("Done");
                 //Update the cube's current coordinates
-
                 foreach (var cube in cubesToRotate)
                 {
                     cube.transform.SetParent(this.cubesParent, true);
@@ -198,8 +197,6 @@ public class MagicCube
         };
 
     }
-
-
 
     private void GetAllCubesAffectedByPivot(CubeRotationAxis pivot, int index, ref List<IndividualCubeController> cubesToReturn)
     {
@@ -251,30 +248,25 @@ public class MagicCube
 
     public bool CheckVictory()
     {
-        //Check if the outermost pivots are all made up of cubes with the same rotation
-
-        //CubeRotationAxis[] rotationAxii = (CubeRotationAxis[])System.Enum.GetValues(typeof(CubeRotationAxis));
-
-        //TODO: use dot instead of angle
+        //Check if one pivots is made up entirely of cubes with the same rotation
 
         List<IndividualCubeController> cubesInPivot = new List<IndividualCubeController>(gameSize);
-        //foreach (CubeRotationAxis axis in rotationAxii)
+
         for (int i=0;i<this.gameSize;i++)
         {
             GetAllCubesAffectedByPivot(CubeRotationAxis.XAxis, i, ref cubesInPivot);
             var firstRotation = cubesInPivot[0].transform.localRotation;
             foreach (var cube in cubesInPivot)
             {
-                float angle = Mathf.Abs(Quaternion.Dot(firstRotation, cube.transform.rotation));
-                //Debug.Log(angle);
-                if (angle<.9f)
+                // Check if the rotations match, with some leeway allowed for floating point imprecisions
+                float absDot = Mathf.Abs(Quaternion.Dot(firstRotation, cube.transform.rotation));
+                if (absDot<.9f)
                 {
                     return false;
                 }
             }
         }
         return true;
-        //return allCubes.TrueForAll(x => { return x.goalCoordinates == x.currentCoordinates; });
     }
 
     //This would have been put into a proper unit test system in any real project
@@ -282,7 +274,6 @@ public class MagicCube
     {
         for (int i = 0; i < 2000; i++)
         {
-
             int randi = Random.Range(0, 5000);
             int randj = Random.Range(0, 5000);
             int randk = Random.Range(0, 5000);
@@ -299,7 +290,6 @@ public class MagicCube
 
     public static MagicCube CreateFromSerializedData(SaveGameSystem.SerializableCubeData data, int individualCubeSizeInWorldUnits, IndividualCubeController individualCubePrefab)
     {
-        
         //Generate cube from data
         var newCube = new MagicCube(data.gameSize, individualCubeSizeInWorldUnits, individualCubePrefab);
 

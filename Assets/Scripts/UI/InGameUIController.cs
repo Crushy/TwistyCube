@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,10 +18,20 @@ public class InGameUIController : MonoBehaviour
     [SerializeField] private CanvasGroup fadeCanvas;
 
     //[SerializeField] private Button pauseButton;
-    #pragma warning restore 649
+#pragma warning restore 649
+
+    private void OnEnable()
+    {
+        this.UpdateUITimerDisplay();
+    }
 
     public void SetTimerText(System.TimeSpan text) {
         timerIndicator.text = text.ToShortForm();
+    }
+
+    private void UpdateUITimerDisplay()
+    {
+        this.timerIndicator.gameObject.SetActive(PerSessionData.ShowTimer);
     }
 
     public void FadeIn()
@@ -91,9 +102,7 @@ public class InGameUIController : MonoBehaviour
     public void UI_ToggleTimer()
     {
         PerSessionData.ShowTimer = !PerSessionData.ShowTimer;
-        this.timerIndicator.gameObject.SetActive(PerSessionData.ShowTimer);
+        UpdateUITimerDisplay();
     }
-
-    
     #endregion
 }

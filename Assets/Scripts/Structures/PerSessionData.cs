@@ -10,9 +10,7 @@ using UnityEngine;
 public static class PerSessionData
 {
     public static int CubeSize = 4;
-    public static bool ShowTimer;
-
-
+    public static bool ShowTimer = true;
 
     public enum GameModes
     {

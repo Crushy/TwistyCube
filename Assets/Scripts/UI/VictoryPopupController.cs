@@ -6,7 +6,9 @@ using UnityEngine.UI;
 
 public class VictoryPopupController : MonoBehaviour
 {
+    #pragma warning disable 649
     [SerializeField] private Text timeTakenTextField;
+    #pragma warning restore 649
 
     public void SetTimeTaken(TimeSpan timeTaken)
     {
