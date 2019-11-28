@@ -4,7 +4,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(Camera))]
 public class OrbitCamera : MonoBehaviour
-{   
+{
 
     //Serializable struct to support platform-dependent settings and so it looks nicer in the editor
     [System.Serializable]
@@ -39,8 +39,6 @@ public class OrbitCamera : MonoBehaviour
 
     [SerializeField]
     private Vector3 cameraCentre = Vector3.zero;
-
-
 
     private new Camera camera;
 

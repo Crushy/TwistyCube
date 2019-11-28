@@ -397,7 +397,7 @@ PrefabInstance:
     - target: {fileID: 6447812017215540407, guid: 8bffff5af12c4204d911c3cb8acd5386,
         type: 3}
       propertyPath: m_Name
-      value: Confirm Button (1)
+      value: Cancel Button
       objectReference: {fileID: 0}
     - target: {fileID: 7757782248763706476, guid: 8bffff5af12c4204d911c3cb8acd5386,
         type: 3}
@@ -527,7 +527,7 @@ PrefabInstance:
     - target: {fileID: 3150209396868383712, guid: 8bffff5af12c4204d911c3cb8acd5386,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: PrevStage
+      value: ResetStages
       objectReference: {fileID: 0}
     - target: {fileID: 3150209396868383712, guid: 8bffff5af12c4204d911c3cb8acd5386,
         type: 3}
@@ -1916,7 +1916,7 @@ MonoBehaviour:
   m_CancelButton: Cancel
   m_InputActionsPerSecond: 10
   m_RepeatDelay: 0.5
-  m_ForceModuleActive: 1
+  m_ForceModuleActive: 0
 --- !u!114 &1394320798
 MonoBehaviour:
   m_ObjectHideFlags: 0

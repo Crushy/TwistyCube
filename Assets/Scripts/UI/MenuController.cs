@@ -25,13 +25,13 @@ public class MenuController : MonoBehaviour
     public void OnButtonResume() {
         Debug.Log($"Resuming game");
         PerSessionData.newGameMode = PerSessionData.GameModes.Resume;
-        SceneManager.LoadScene("Game");
+        SceneManager.LoadScene("Game",LoadSceneMode.Single);
     }
 
     public void OnButtonNewGame() {
         Debug.Log($"Starting new game with size {PerSessionData.CubeSize}");
         PerSessionData.newGameMode = PerSessionData.GameModes.NewGame;
-        SceneManager.LoadScene("Game");
+        SceneManager.LoadScene("Game", LoadSceneMode.Single);
     }
 
     public void OnButtonQuit() {

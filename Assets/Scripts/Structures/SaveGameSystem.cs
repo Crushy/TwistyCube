@@ -30,7 +30,7 @@ public static class SaveGameSystem
     {
         
         PlayerPrefs.SetString(cubeDataKey, JsonUtility.ToJson(cubeData));
-        Debug.Log(timeTakenSoFar.TotalSeconds.ToString());
+        //Debug.Log(timeTakenSoFar.TotalSeconds.ToString());
         PlayerPrefs.SetString(timeDataKey, timeTakenSoFar.TotalSeconds.ToString());
         
         PlayerPrefs.Save();

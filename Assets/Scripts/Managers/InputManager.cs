@@ -48,13 +48,19 @@ public class InputManager : MonoBehaviour
         //{
         //    gameManager.UndoLastRotation();
         //}
-        
-        #if !UNITY_ANDROID
+
+//#if !UNITY_ANDROID
         //If no touches were detected there's a good chance we want to check what the mouse is doing
         //I could make some platform checking but these days pretty much anything has touch and/or mouse support
         if (Input.touchCount == 0) {
             //Mouse zoom is a separate thing
             orbitingCamera.AddZoomMouseScrollInput(-Input.GetAxis("Mouse ScrollWheel"));
+
+            if (Input.GetMouseButton(0) && !this.startedSwipeOnCube)
+            {
+                Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+                orbitingCamera.AddMouseInput(mouseDelta);
+            }
 
             if (allowRotations)
             {
@@ -73,15 +79,16 @@ public class InputManager : MonoBehaviour
                         gameManager.CubeSwipeStarted(hit.transform.position, hit.normal);
                     }
                 }
-                if (Input.GetMouseButton(0) && !this.startedSwipeOnCube)
-                {
-                    Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-                    orbitingCamera.AddMouseInput(mouseDelta);
-                }
             }
         }
 
-        #endif
+//#endif
+
+        //if (UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject != null)
+        //{
+        //    return;
+        //}
+
         // Handle touch input
         if (Input.touchCount == 1)
         {
@@ -101,7 +108,6 @@ public class InputManager : MonoBehaviour
             }
             else if (!this.startedSwipeOnCube && touch.phase == TouchPhase.Moved)
             {
-                Debug.Log(touch.deltaPosition);
                 orbitingCamera.AddTouchInput(touch.deltaPosition);
             }
             else if (this.startedSwipeOnCube && touch.phase == TouchPhase.Ended)

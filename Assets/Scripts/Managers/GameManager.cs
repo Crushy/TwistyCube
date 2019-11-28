@@ -25,6 +25,9 @@ public class GameManager : MonoBehaviour
     [Range(0,10)]
     [SerializeField] private int numberOfRandomShuffles = 3;
 
+    [Tooltip("X and Y in euler degrees followed by distance")]
+    [SerializeField] private Vector3 cameraStartingPosition;
+
     private MagicCube magicCube;
     private Transform cubeHighlighter;
 
@@ -69,7 +72,7 @@ public class GameManager : MonoBehaviour
         Application.targetFrameRate = 60;
         Input.simulateMouseWithTouches = true;
 
-        this.ingameUI.FadeIn();
+        //this.ingameUI.FadeIn();
 
         this.cubeHighlighter = GameObject.Instantiate(this.HighlightCubePrefab);
         this.cubeHighlighter.gameObject.SetActive(false);
@@ -79,6 +82,8 @@ public class GameManager : MonoBehaviour
         ingameUI.HideUndoButton(); 
 
         System.TimeSpan accumulatedTime = System.TimeSpan.Zero;
+
+        this.orbitingCamera.SetCameraPosition(cameraStartingPosition.x, cameraStartingPosition.y, cameraStartingPosition.z);
 
         switch (PerSessionData.newGameMode)
         {
@@ -359,7 +364,7 @@ public class GameManager : MonoBehaviour
 
         ingameUI.HideUndoButton();
 
-        ingameUI.FadeIn();
+        this.ingameUI.FadeIn();
 
         //Do a few loops around the cube and stop at horizontal 45 degree angle
         float startXAngle = 0;
