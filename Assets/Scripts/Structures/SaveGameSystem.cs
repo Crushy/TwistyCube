@@ -35,8 +35,8 @@ public static class SaveGameSystem
         
         PlayerPrefs.Save();
 
-        Debug.Log(PlayerPrefs.GetString(timeDataKey));
-        Debug.Log(PlayerPrefs.GetString(cubeDataKey));
+        //Debug.Log(PlayerPrefs.GetString(timeDataKey));
+        //Debug.Log(PlayerPrefs.GetString(cubeDataKey));
     }
 
     //Returns true if saved data was able to be loaded

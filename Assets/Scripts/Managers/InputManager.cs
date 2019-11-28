@@ -49,59 +49,75 @@ public class InputManager : MonoBehaviour
         //    gameManager.UndoLastRotation();
         //}
 
-        orbitingCamera.AddZoomMouseScrollInput(-Input.GetAxis("Mouse ScrollWheel"));
+        //If no touches were detected there's a good chance we want to check what the mouse is doing
+        //I could make some platform checking but these days pretty much anything has touch and/or mouse support
+        if (Input.touchCount == 0) {
+            //Mouse zoom is a separate thing
+            orbitingCamera.AddZoomMouseScrollInput(-Input.GetAxis("Mouse ScrollWheel"));
 
-        if (allowRotations)
-        {
-            if (startedSwipeOnCube == true && Input.GetMouseButtonUp(0))
+            if (allowRotations)
             {
-                gameManager.CubeSwipePerformed(this.mouseSwipeStart, Input.mousePosition);
-                this.startedSwipeOnCube = false;
-            }
-
-            if (Input.GetMouseButtonDown(0))
-            {
-                if (Physics.Raycast(orbitingCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+                if (startedSwipeOnCube == true && Input.GetMouseButtonUp(0))
                 {
-                    startedSwipeOnCube = true;
-                    //Debug.Log($"Hit a {hit.transform.gameObject}");
-                    //this.cubeHighlighter.transform.position = hit.transform.position;
-                    //this.hitCubeNormal = hit.normal;
+                    gameManager.CubeSwipePerformed(this.mouseSwipeStart, Input.mousePosition);
+                    this.startedSwipeOnCube = false;
+                }
 
-                    //this.cubeHighlighter.gameObject.SetActive(true);
-                    this.mouseSwipeStart = Input.mousePosition;
-                    gameManager.CubeSwipeStarted(hit.transform.position, hit.normal);
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (Physics.Raycast(orbitingCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+                    {
+                        startedSwipeOnCube = true;
+                        this.mouseSwipeStart = Input.mousePosition;
+                        gameManager.CubeSwipeStarted(hit.transform.position, hit.normal);
+                    }
+                }
+                if (Input.GetMouseButton(0) && !this.startedSwipeOnCube)
+                {
+                    Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+                    orbitingCamera.AddMouseInput(mouseDelta);
                 }
             }
-            if (Input.GetMouseButton(0) && !this.startedSwipeOnCube)
-            {
-
-                //this.mouseSwipeStart = Input.mousePosition;
-
-                //Vector2 movement = (Input.mousePosition-this.swipeStart);
-                Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-                orbitingCamera.AddMouseInput(mouseDelta);
-
-            }
         }
-        
 
 
-
+        // Handle touch input
         if (Input.touchCount == 1)
         {
             Touch touch = Input.GetTouch(0);
 
-            if (touch.phase == TouchPhase.Moved)
+            if (touch.phase == TouchPhase.Began && touch.phase == TouchPhase.Began)
+            {
+                if (allowRotations)
+                {
+                    if (Physics.Raycast(orbitingCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+                    {
+                        startedSwipeOnCube = true;
+                        this.mouseSwipeStart = Input.mousePosition;
+                        gameManager.CubeSwipeStarted(hit.transform.position, hit.normal);
+                    }
+                }
+            }
+            else if (!this.startedSwipeOnCube && touch.phase == TouchPhase.Moved)
             {
                 Debug.Log(touch.deltaPosition);
                 orbitingCamera.AddTouchInput(touch.deltaPosition);
             }
+            else if (touch.phase == TouchPhase.Ended)
+            {
+                gameManager.CubeSwipePerformed(this.mouseSwipeStart, Input.mousePosition);
+                this.startedSwipeOnCube = false;
+            }
         }
+        //Pinch to zoom
         else if (Input.touchCount == 2)
         {
+            
             Touch touchZero = Input.GetTouch(0);
             Touch touchOne = Input.GetTouch(1);
+
+            if (touchZero.phase != TouchPhase.Moved && touchOne.phase != TouchPhase.Moved)
+                return;
 
             // Find the position in the previous frame of each touch.
             Vector2 touchZeroPrevPos = touchZero.position - touchZero.deltaPosition;
@@ -115,48 +131,9 @@ public class InputManager : MonoBehaviour
             float deltaMagnitudeDiff = prevTouchDeltaMag - touchDeltaMag;
             orbitingCamera.AddZoomInputPinch(deltaMagnitudeDiff);
         }
-
-        
-        foreach (Touch touch in Input.touches)
-        {
-            HandleTouch(touch.fingerId, Camera.main.ScreenToWorldPoint(touch.position), touch.phase);
-        }
-
-        //Simulate touch events from mouse events
-        if (Input.touchCount == 0)
-        {
-            if (Input.GetMouseButtonDown(0))
-            {
-                HandleTouch(0, Camera.main.ScreenToWorldPoint(Input.mousePosition), TouchPhase.Began);
-            }
-            if (Input.GetMouseButton(0))
-            {
-                HandleTouch(0, Camera.main.ScreenToWorldPoint(Input.mousePosition), TouchPhase.Moved);
-            }
-            if (Input.GetMouseButtonUp(0))
-            {
-                HandleTouch(0, Camera.main.ScreenToWorldPoint(Input.mousePosition), TouchPhase.Ended);
-            }
-        }
     }
 
-    private void HandleTouch(int touchFingerId, Vector3 touchPosition, TouchPhase touchPhase)
-    {
-        switch (touchPhase)
-        {
-            case TouchPhase.Began:
-                // TODO
-                break;
-            case TouchPhase.Moved:
-                // TODO
-                break;
-            case TouchPhase.Ended:
-                // TODO
-                break;
-        }
-    }
-
-public void DisplayWinScreen(System.TimeSpan timeTaken)
+    public void DisplayWinScreen(System.TimeSpan timeTaken)
     {
         this.ingameUi.ShowWinScreen(timeTaken);
         this.inputLock++;

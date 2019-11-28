@@ -46,13 +46,13 @@ public class GameManager : MonoBehaviour
     private Coroutine RefreshUITimeCounter;
 
     #region Undo
-    public Stack<RubikCubeRotation> performedRotations = new Stack<RubikCubeRotation>();
+    public Stack<RubikCubeRotation> accumulatedUserRotations = new Stack<RubikCubeRotation>();
 
     public void UndoLastRotation()
     {
-        if (this.performedRotations.Count > 0)
+        if (this.accumulatedUserRotations.Count > 0)
         {
-            var lastRot = this.performedRotations.Pop();
+            var lastRot = this.accumulatedUserRotations.Pop();
             lastRot.Direction = !lastRot.Direction;
             PerformRotation(lastRot, false);
         }
@@ -76,6 +76,10 @@ public class GameManager : MonoBehaviour
 
         this.cubeHighlighter = GameObject.Instantiate(this.HighlightCubePrefab);
         this.cubeHighlighter.gameObject.SetActive(false);
+
+        //Hide the undo button until we start adding rotations.
+        //Delete this if we end up serializing performed rotations at some point
+        ingameUI.HideUndoButton(); 
 
         System.TimeSpan accumulatedTime = System.TimeSpan.Zero;
 
@@ -279,7 +283,7 @@ public class GameManager : MonoBehaviour
         this.inputManager.allowRotations = true;
     }
     #endregion
-    public void PerformRotation(CubeRotationAxis axis, int pivotIndex, bool direction, bool addToUndo=false, float duration = .25f)
+    public void PerformRotation(CubeRotationAxis axis, int pivotIndex, bool direction, bool addToUndo=true, float duration = .25f)
     {
         PerformRotation(new RubikCubeRotation() { RotationAxis = axis, Direction = direction, PivotIndex = pivotIndex }, addToUndo, duration);
     }
@@ -299,7 +303,7 @@ public class GameManager : MonoBehaviour
 
         if (addToUndo)
         {
-            performedRotations.Push(rotationToPerform);
+            accumulatedUserRotations.Push(rotationToPerform);
         }
 
         var rotationData =
@@ -329,7 +333,7 @@ public class GameManager : MonoBehaviour
             }
         ));
 
-        if (performedRotations.Count > 0)
+        if (accumulatedUserRotations.Count > 0)
         {
             ingameUI.ShowUndoButton();
         }
