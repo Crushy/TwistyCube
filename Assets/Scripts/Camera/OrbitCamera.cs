@@ -64,7 +64,7 @@ public class OrbitCamera : MonoBehaviour
     }
 
     public void AddTouchInput(Vector2 input) {
-        targetRotation.x += input.x * this.cameraSettings.xSpeed * .1f;
+        targetRotation.x += input.x * this.cameraSettings.xSpeed * .05f;
         targetRotation.y += input.y * this.cameraSettings.ySpeed * .025f;
     }
 

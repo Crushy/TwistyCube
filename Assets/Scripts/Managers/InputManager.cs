@@ -48,7 +48,8 @@ public class InputManager : MonoBehaviour
         //{
         //    gameManager.UndoLastRotation();
         //}
-
+        
+        #if !UNITY_ANDROID
         //If no touches were detected there's a good chance we want to check what the mouse is doing
         //I could make some platform checking but these days pretty much anything has touch and/or mouse support
         if (Input.touchCount == 0) {
@@ -80,7 +81,7 @@ public class InputManager : MonoBehaviour
             }
         }
 
-
+        #endif
         // Handle touch input
         if (Input.touchCount == 1)
         {

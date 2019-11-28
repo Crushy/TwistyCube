@@ -67,7 +67,7 @@ public class GameManager : MonoBehaviour
 
     private void Start() {
         Application.targetFrameRate = 60;
-        Input.simulateMouseWithTouches = false;
+        Input.simulateMouseWithTouches = true;
 
         this.ingameUI.FadeIn();
 

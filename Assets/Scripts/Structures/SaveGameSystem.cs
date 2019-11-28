@@ -60,7 +60,7 @@ public static class SaveGameSystem
         //Extract and unpack the time data
         string timeAsDoubleString = PlayerPrefs.GetString(timeDataKey, "");
         timeTakenSoFar = System.TimeSpan.FromSeconds(double.Parse(timeAsDoubleString));
-        Debug.Log(timeTakenSoFar);
+        //Debug.Log(timeTakenSoFar);
         return true;
 
     }
