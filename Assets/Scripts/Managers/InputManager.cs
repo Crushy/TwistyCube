@@ -103,7 +103,7 @@ public class InputManager : MonoBehaviour
                 Debug.Log(touch.deltaPosition);
                 orbitingCamera.AddTouchInput(touch.deltaPosition);
             }
-            else if (touch.phase == TouchPhase.Ended)
+            else if (this.startedSwipeOnCube && touch.phase == TouchPhase.Ended)
             {
                 gameManager.CubeSwipePerformed(this.mouseSwipeStart, Input.mousePosition);
                 this.startedSwipeOnCube = false;
