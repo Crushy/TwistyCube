@@ -5,6 +5,7 @@ using UnityEngine.Events;
 
 public class StagedUI : MonoBehaviour
 {
+    #pragma warning disable 649
 
     [SerializeField]
     private RectTransform[] stages;
@@ -14,7 +15,7 @@ public class StagedUI : MonoBehaviour
 
     private int currentStage = 0;
 
-    
+    #pragma warning restore 649
 
     private void OnEnable() {
         this.currentStage = 0;

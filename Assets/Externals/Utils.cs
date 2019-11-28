@@ -183,6 +183,20 @@ public static class VectorExtensions
     }
 }
 
+public static class QuaternionExtensions {
+
+    public static Quaternion RoundAngle(this Quaternion v, float increment) {
+        Vector3 vE = v.eulerAngles;
+        vE.x = Mathf.Round(vE.x/increment)*increment;
+        vE.y = Mathf.Round(vE.y/increment)*increment;
+        vE.z = Mathf.Round(vE.z/increment)*increment;
+
+        //var quat = Quaternion.Euler(vE);
+        return Quaternion.Euler(vE);
+        //newV.Set(quat.x,quat.y,quat.z,quat.w);
+    }
+}
+
 public static class RandomUtils
 {
 
@@ -269,15 +283,15 @@ static class TimeSpanExtensions
         }
         if (t.Hours > 0)
         {
-            shortForm += string.Format("{0}:", t.Hours.ToString());
+            shortForm += string.Format("{0}h ", t.Hours.ToString());
         }
         if (t.Minutes > 0)
         {
-            shortForm += string.Format("{0}:", t.Minutes.ToString());
+            shortForm += string.Format("{0}m ", t.Minutes.ToString());
         }
         if (t.Seconds > 0)
         {
-            shortForm += string.Format("{0}", t.Seconds.ToString());
+            shortForm += string.Format("{0}s", t.Seconds.ToString());
         }
         return shortForm;
     } 

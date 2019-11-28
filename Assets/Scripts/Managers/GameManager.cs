@@ -7,42 +7,56 @@ using System;
 
 public class GameManager : MonoBehaviour
 {
-
+    #pragma warning disable 649
+    [Header("Prefabs")]
     [SerializeField]
     private IndividualCubeController IndividualCubePrefab;
     [SerializeField]
     private Transform HighlightCubePrefab;
-    
-    //References
-    [SerializeField]
-    private OrbitCamera orbitingCamera;
+
+    [Header("Scene references")]
+    [SerializeField] private OrbitCamera orbitingCamera;
+
+    [SerializeField] public InGameUIController ingameUI;
+    [SerializeField] public InputManager inputManager;
+
+    [Header("Settings")]
+    [Tooltip("How many random rotations are applied when starting a new game")]
+    [Range(0,10)]
+    [SerializeField] private int numberOfRandomShuffles = 3;
 
     private MagicCube magicCube;
+    private Transform cubeHighlighter;
 
-    
+    //TODO: remove
+    public PerSessionData.GameModes gameMode;
+    #pragma warning restore 649
+
+    //Custom event used by the in-game timer
     [System.Serializable]
     public class MyStringEvent : UnityEvent<System.TimeSpan>
     {
     }
     
-    
     public MyStringEvent GameTimerTick;
 
     private GameTimer currentGameTimer;
 
+    private Coroutine RefreshUITimeCounter;
 
-    private Coroutine timerCounting;
+    #region Undo
+    public Stack<RubikCubeRotation> performedRotations = new Stack<RubikCubeRotation>();
 
-    private void OnEnable() {
-        magicCube = new MagicCube(6,1,IndividualCubePrefab);
-        magicCube.InstantiateCube();
-        this.currentGameTimer = new GameTimer(System.TimeSpan.Zero);
-        timerCounting = StartCoroutine(TimerTick());
+    public void UndoLastRotation()
+    {
+        if (this.performedRotations.Count > 0)
+        {
+            var lastRot = this.performedRotations.Pop();
+            lastRot.Direction = !lastRot.Direction;
+            PerformRotation(lastRot, false);
+        }
     }
-
-    private void OnDisable() {
-        //StartCoroutine(TimerTick());
-    }
+    #endregion
 
     private IEnumerator TimerTick() {
         while (true) {
@@ -53,19 +67,37 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    int inputLock = 0;
-
-    private Transform cubeHighlighter;
-
     private void Start() {
-        this.cubeHighlighter = GameObject.Instantiate(this.HighlightCubePrefab);
-        this.cubeHighlighter.gameObject.SetActive(false);
         Application.targetFrameRate = 60;
         Input.simulateMouseWithTouches = false;
+
+
+        this.cubeHighlighter = GameObject.Instantiate(this.HighlightCubePrefab);
+        this.cubeHighlighter.gameObject.SetActive(false);
+
+        System.TimeSpan accumulatedTime = System.TimeSpan.Zero;
+
+        switch (gameMode)
+        {
+            case PerSessionData.GameModes.Resume:
+                Debug.Log("Loading cube from playerprefs");
+                SaveGameSystem.LoadGameState(
+                    out SaveGameSystem.SerializableCubeData cubeData,
+                    out accumulatedTime
+                );
+                this.magicCube = MagicCube.CreateFromSerializedData(cubeData,1,this.IndividualCubePrefab);
+                this.inputManager.allowRotations = true;
+                break;
+            case PerSessionData.GameModes.NewGame:
+                Debug.Log("Creating a new game");
+                this.magicCube = MagicCube.CreateFromNewGame(PerSessionData.CubeSize,1, this.IndividualCubePrefab);
+                StartCoroutine(this.ScrambleCube());
+                break;
+        }
+
+        this.currentGameTimer = new GameTimer(accumulatedTime);
+        RefreshUITimeCounter = StartCoroutine(TimerTick());
     }
-
-
-    
 
     private CubeRotationAxis GetLargestDimensionAsAxis(Vector3 vec)
     {
@@ -91,8 +123,6 @@ public class GameManager : MonoBehaviour
         return CubeRotationAxis.ZAxis;
     }
 
-    
-
     private CubeRotationAxis VectorToRotationAxis(Vector3 vec)
     {
         if (Mathf.Abs(Vector3.Dot(vec, Vector3.right)) > .95f)
@@ -114,7 +144,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    
+    #region Rotation input
     public void CubeSwipeStarted(Vector3 cubePos, Vector3 hitNormal)
     {
         this.cubeHighlighter.gameObject.SetActive(true);
@@ -197,8 +227,10 @@ public class GameManager : MonoBehaviour
 
         this.cubeHighlighter.gameObject.SetActive(false);
     }
+    #endregion
 
-    internal void RandomRotation()
+    #region Cube Scrambling
+    private RubikCubeRotation GetRandomRotation()
     {
         int pivotIndex = UnityEngine.Random.Range(0, (int)magicCube.CubeSize);
 
@@ -206,24 +238,48 @@ public class GameManager : MonoBehaviour
         var chosenAxis = rotationAxis.ChooseRandomly();
         bool rotationDirection = UnityEngine.Random.value < .5f;
 
-        PerformRotation(chosenAxis, pivotIndex, rotationDirection);
-    }
-
-    public void PerformRotation(CubeRotationAxis axis, int pivotIndex, bool direction)
-    {
-        PerformRotation(new RubikCubeRotation() { RotationAxis = axis, Direction = direction, PivotIndex = pivotIndex });
-    }
-
-    public Stack<RubikCubeRotation> perfFormedRotations = new Stack<RubikCubeRotation>();
-
-    public void UndoLastRotation()
-    {
-        if (this.perfFormedRotations.Count > 0)
+        return new RubikCubeRotation() 
         {
-            var lastRot = this.perfFormedRotations.Pop();
-            lastRot.Direction = !lastRot.Direction;
-            PerformRotation(lastRot, false);
+            RotationAxis=chosenAxis,
+            PivotIndex = pivotIndex,
+            Direction = rotationDirection
+        };
+    }
+
+    private IEnumerator ScrambleCube()
+    {
+        this.inputManager.allowRotations = false;
+
+        for (int i = 0; i < this.numberOfRandomShuffles; i++)
+        {
+            var rotation = GetRandomRotation();
+
+            var rotationData =
+                this.magicCube.RotatePivot(
+                    rotation.RotationAxis,
+                    rotation.PivotIndex,
+                    rotation.Direction
+            );
+
+            yield return StartCoroutine(InterpolationUtils.InterpolateAction
+            (
+                rotationData.pivotingAction,
+                .25f,
+                (timeFactor) =>
+                {
+                    rotationData.finalAction();
+                }
+            ));
+            this.SaveGameState();
+            //PerformRotation(rotation, addToUndo: false, duration: .1f);
         }
+
+        this.inputManager.allowRotations = true;
+    }
+    #endregion
+    public void PerformRotation(CubeRotationAxis axis, int pivotIndex, bool direction, bool addToUndo=false, float duration = .25f)
+    {
+        PerformRotation(new RubikCubeRotation() { RotationAxis = axis, Direction = direction, PivotIndex = pivotIndex }, addToUndo, duration);
     }
 
     /// <summary>
@@ -233,7 +289,7 @@ public class GameManager : MonoBehaviour
     /// <param name="pivotIndex"></param>
     /// <param name="direction"></param>
     /// <remarks></remarks>
-    public void PerformRotation(RubikCubeRotation rotationToPerform, bool addToUndo = true)
+    public void PerformRotation(RubikCubeRotation rotationToPerform, bool addToUndo = true, float duration=.25f)
     {
         CubeRotationAxis axis = rotationToPerform.RotationAxis;
         int pivotIndex = rotationToPerform.PivotIndex;
@@ -241,7 +297,7 @@ public class GameManager : MonoBehaviour
 
         if (addToUndo)
         {
-            perfFormedRotations.Push(rotationToPerform);
+            performedRotations.Push(rotationToPerform);
         }
 
         var rotationData =
@@ -249,11 +305,9 @@ public class GameManager : MonoBehaviour
                 axis,
                 pivotIndex,
                 direction
-            );
+        );
 
-
-
-        inputLock++;
+        inputManager.AquireInputLock();
         StartCoroutine(InterpolationUtils.InterpolateAction
         (
             rotationData.pivotingAction,
@@ -265,27 +319,72 @@ public class GameManager : MonoBehaviour
 
                 if (magicCube.CheckVictory())
                 {
-                    Debug.Log("You won");
-                }
-                else
-                {
-                    //inputLock--;
+                    GameWon();
                 }
 
-                inputLock--;
+                this.SaveGameState();
+                inputManager.ReleaseInputLock();
             }
         ));
+
+        if (performedRotations.Count > 0)
+        {
+            ingameUI.ShowUndoButton();
+        }
+        else
+        {
+            ingameUI.HideUndoButton();
+        }
     }
 
-    private void OnDestroy()
+    private void SaveGameState()
     {
-        //Serialize current cube state
-
+        SaveGameSystem.SaveGameState(this.magicCube.GetSerializableCubeData(),this.currentGameTimer.GetCurrentGameDuration());
     }
 
-    //Timers are on another thread so unity can't properly stop them unless we explicitly say so
-    private void OnApplicationQuit() {
+    private void GameWon()
+    {
+        this.inputManager.allowRotations = false;
+        this.inputManager.AquireInputLock();
+
         
+        Debug.Log("You won");
+
+        //Stop the timer
+        StopCoroutine(RefreshUITimeCounter);
+        this.currentGameTimer.StopTimer();
+
+        ingameUI.HideUndoButton();
+
+        ingameUI.FadeIn();
+
+        //Do a few loops around the cube and stop at horizontal 45 degree angle
+        float startXAngle = 0;
+        float endXAngle = 360f * 2.125f;
+        float startYAngle = 0;
+        float endYAngle = -45;
+        StartCoroutine(
+            InterpolationUtils.InterpolateAction(
+                (t)=>
+                {
+                    //Apply an easing function to t so the animation looks smoother
+                    float easedT = Mathf.SmoothStep(0, 1, t);
+                    float distance = Mathf.Lerp(orbitingCamera.MinZoom,orbitingCamera.MaxZoom, easedT);
+                    float xangle = Mathf.Lerp(startXAngle, endXAngle, easedT);
+                    float yangle = Mathf.Lerp(startYAngle, endYAngle, easedT);
+                    orbitingCamera.SetCameraPosition(xangle, yangle, distance);
+                },
+                4,
+                (t)=>
+                {
+                    //Finally, release the input lock and display the win dialog
+                    inputManager.ReleaseInputLock();
+
+                    ingameUI.ShowWinScreen(this.currentGameTimer.GetCurrentGameDuration());
+                    this.inputManager.ReleaseInputLock();
+                }
+            )
+        );
     }
     
 }

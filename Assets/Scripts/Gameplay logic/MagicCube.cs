@@ -26,17 +26,8 @@ public class MagicCube
 
     private List<IndividualCubeController> allCubes;
 
-    public MagicCube(int gameSize, float individualCubeSizeInWorldUnits, IndividualCubeController individualCubePrefab)
-    {
-        this.gameSize = gameSize;
-        this.cubesParent = new GameObject().transform;
-        this.individualCubePrefab = individualCubePrefab;
-
-        //this.individualCubeSize = individualCubePrefab.GetComponentInChildren<Renderer>().bounds.extents.x*2;
-        this.individualCubeSize = individualCubeSizeInWorldUnits;
-    }
-
-    private void CreateSubCube(int x, int y, int z)
+    //Nullable is here because Vector3Ints can't be defaulted to null
+    private IndividualCubeController CreateSubCube(int x, int y, int z, System.Nullable<Vector3Int> goal = null)
     {
         var newCube = GameObject.Instantiate(this.individualCubePrefab, cubesParent);
 
@@ -44,44 +35,66 @@ public class MagicCube
             CubeCoordinatesToWorld(x, y, z);
 
         //Cube was placed, now let's do housekeeping
-        newCube.goalCoordinates = new Vector3Int(x, y, z);
-        newCube.currentCoordinates = newCube.goalCoordinates;
+        newCube.currentCoordinates = new Vector3Int(x, y, z);
+
+        if (goal.HasValue)
+        {
+            newCube.goalCoordinates = goal.Value;
+        }
+        else
+        {
+            newCube.goalCoordinates = newCube.currentCoordinates;
+        }
         allCubes.Add(newCube);
+        return newCube;
+    }
+
+    private MagicCube(int gameSize, float individualCubeSizeInWorldUnits, IndividualCubeController individualCubePrefab)
+    {
+        this.gameSize = gameSize;
+        this.cubesParent = new GameObject().transform;
+        this.individualCubePrefab = individualCubePrefab;
+
+        this.individualCubeSize = individualCubeSizeInWorldUnits;
+        this.allCubes = new List<IndividualCubeController>(Mathf.RoundToInt(Mathf.Pow(gameSize, 3)));
     }
 
     //Creates the entire Rubik cube out of smaller cubes that make up a "shell"
-    public void InstantiateCube()
+    public static MagicCube CreateFromNewGame(int gameSize, float individualCubeSizeInWorldUnits, IndividualCubeController individualCubePrefab)
     {
-        this.allCubes = new List<IndividualCubeController>(Mathf.RoundToInt(Mathf.Pow(gameSize, 3)));
+        Debug.Assert(gameSize > 1);
+        var newCube = new MagicCube(gameSize, individualCubeSizeInWorldUnits, individualCubePrefab);
 
         //Possibly this could be refactored into a helper method that creates planes of cubes of a certain side
 
-        //X plates
+        //X plates (full size)
         for (int j = 0; j < gameSize; j++)
             for (int k = 0; k < gameSize; k++)
-                CreateSubCube(0, j, k);
+                newCube.CreateSubCube(0, j, k);
 
         for (int j = 0; j < gameSize; j++)
             for (int k = 0; k < gameSize; k++)
-                CreateSubCube(gameSize - 1, j, k);
+                newCube.CreateSubCube(gameSize - 1, j, k);
+
+        //Second plates (smaller)
 
         //y plates
-        for (int i = 0; i < gameSize; i++)
+        for (int i = 1; i < gameSize-1; i++)
             for (int k = 0; k < gameSize; k++)
-                CreateSubCube(i, 0, k);
+                newCube.CreateSubCube(i, 0, k);
 
-        for (int i = 0; i < gameSize; i++)
+        for (int i = 1; i < gameSize-1; i++)
             for (int k = 0; k < gameSize; k++)
-                CreateSubCube(i, gameSize - 1, k);
+                newCube.CreateSubCube(i, gameSize - 1, k);
 
         //Z plates
         for (int i = 1; i < gameSize - 1; i++)
             for (int j = 1; j < gameSize - 1; j++)
-                CreateSubCube(i, j, 0);
+                newCube.CreateSubCube(i, j, 0);
 
         for (int i = 1; i < gameSize - 1; i++)
             for (int j = 1; j < gameSize - 1; j++)
-                CreateSubCube(i, j, gameSize - 1);
+                newCube.CreateSubCube(i, j, gameSize - 1);
 
         // Code for a full cube
         //for (int i = 0; i<gameSize ; i++) {
@@ -99,6 +112,7 @@ public class MagicCube
         //        }
         //    }
         //}
+        return newCube;
     }
 
     #region Pivoting
@@ -177,12 +191,15 @@ public class MagicCube
                 {
                     cube.transform.SetParent(this.cubesParent, true);
                     cube.currentCoordinates = WorldCoordinatesToCube(cube.transform.position);
+                    cube.transform.localRotation = cube.transform.localRotation.RoundAngle(90);
                 }
                 GameObject.Destroy(rotationalAidGO);
             }
         };
 
     }
+
+
 
     private void GetAllCubesAffectedByPivot(CubeRotationAxis pivot, int index, ref List<IndividualCubeController> cubesToReturn)
     {
@@ -234,7 +251,30 @@ public class MagicCube
 
     public bool CheckVictory()
     {
-        return allCubes.TrueForAll(x => { return x.goalCoordinates == x.currentCoordinates; });
+        //Check if the outermost pivots are all made up of cubes with the same rotation
+
+        //CubeRotationAxis[] rotationAxii = (CubeRotationAxis[])System.Enum.GetValues(typeof(CubeRotationAxis));
+
+        //TODO: use dot instead of angle
+
+        List<IndividualCubeController> cubesInPivot = new List<IndividualCubeController>(gameSize);
+        //foreach (CubeRotationAxis axis in rotationAxii)
+        for (int i=0;i<this.gameSize;i++)
+        {
+            GetAllCubesAffectedByPivot(CubeRotationAxis.XAxis, i, ref cubesInPivot);
+            var firstRotation = cubesInPivot[0].transform.localRotation;
+            foreach (var cube in cubesInPivot)
+            {
+                float angle = Mathf.Abs(Quaternion.Dot(firstRotation, cube.transform.rotation));
+                //Debug.Log(angle);
+                if (angle<.9f)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+        //return allCubes.TrueForAll(x => { return x.goalCoordinates == x.currentCoordinates; });
     }
 
     //This would have been put into a proper unit test system in any real project
@@ -255,5 +295,38 @@ public class MagicCube
                 $"Cube coordinate conversion test failed. Input was {cubeCoordinates}, output was {convertedCubeCoordinates}"
             );
         }
+    }
+
+    public static MagicCube CreateFromSerializedData(SaveGameSystem.SerializableCubeData data, int individualCubeSizeInWorldUnits, IndividualCubeController individualCubePrefab)
+    {
+        
+        //Generate cube from data
+        var newCube = new MagicCube(data.gameSize, individualCubeSizeInWorldUnits, individualCubePrefab);
+
+        foreach (var cube in data.cubeData)
+        {
+            var cubego = newCube.CreateSubCube(cube.currentCoordinates.x, cube.currentCoordinates.y, cube.currentCoordinates.z, cube.goalCoordinates);
+            cubego.transform.localRotation = cube.rotation;
+        }
+
+        return newCube;
+    }
+
+    public SaveGameSystem.SerializableCubeData GetSerializableCubeData()
+    {
+        List<SaveGameSystem.IndividualCubeData> listOfCubeData = new List<SaveGameSystem.IndividualCubeData>();
+        //Serialize current cube state
+        foreach (var cube in allCubes)
+        {
+            listOfCubeData.Add(cube.GetSerializableData());
+        }
+
+        var cubedata = new SaveGameSystem.SerializableCubeData()
+        {
+            cubeData = listOfCubeData.ToArray(),
+            gameSize = this.gameSize
+        };
+        return cubedata;
+        
     }
 }

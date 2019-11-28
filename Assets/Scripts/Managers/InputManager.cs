@@ -4,23 +4,44 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
+    #pragma warning disable 649
     [SerializeField] private OrbitCamera orbitingCamera;
     [SerializeField] private GameManager gameManager;
     [SerializeField] private InGameUIController ingameUi;
 
-    //private Transform cubeHighlighter;
-    //private Vector3 hitCubeNormal;
     private Vector3 mouseSwipeStart;
-    
+    #pragma warning restore 649
 
-    int inputLock = 0;
+    public bool allowRotations = false;
+    
+    //This would benefit from being a managed resourse (compatible with a using "statement")
+    private int inputLock;
+    public void AquireInputLock()
+    {
+        inputLock++;
+    }
+
+    public void ReleaseInputLock()
+    {
+        inputLock--;
+    }
 
     //this.cubeHighlighter.gameObject.activeInHierarchy == false
     private bool startedSwipeOnCube = false;
     private void Update()
     {
-        if (inputLock != 0)
+        if (inputLock > 0)
             return;
+
+        //if (Input.GetKeyDown(KeyCode.W))
+        //{
+        //    gameManager.GameWon();
+        //}
+
+        //if (Input.GetKeyUp(KeyCode.R))
+        //{
+        //    gameManager.RandomRotation();
+        //}
 
         if (Input.GetKeyDown(KeyCode.U))
         {
@@ -29,36 +50,38 @@ public class InputManager : MonoBehaviour
 
         orbitingCamera.AddZoomMouseScrollInput(-Input.GetAxis("Mouse ScrollWheel"));
 
-
-        if (startedSwipeOnCube==true && Input.GetMouseButtonUp(0))
+        if (allowRotations)
         {
-            gameManager.CubeSwipePerformed(this.mouseSwipeStart, Input.mousePosition);
-            this.startedSwipeOnCube = false;
-        }
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (Physics.Raycast(orbitingCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+            if (startedSwipeOnCube == true && Input.GetMouseButtonUp(0))
             {
-                startedSwipeOnCube = true;
-                //Debug.Log($"Hit a {hit.transform.gameObject}");
-                //this.cubeHighlighter.transform.position = hit.transform.position;
-                //this.hitCubeNormal = hit.normal;
-
-                //this.cubeHighlighter.gameObject.SetActive(true);
-                this.mouseSwipeStart = Input.mousePosition;
-                gameManager.CubeSwipeStarted(hit.transform.position,hit.normal);
+                gameManager.CubeSwipePerformed(this.mouseSwipeStart, Input.mousePosition);
+                this.startedSwipeOnCube = false;
             }
-        }
-        if (Input.GetMouseButton(0) && !this.startedSwipeOnCube)
-        {
 
-            //this.mouseSwipeStart = Input.mousePosition;
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (Physics.Raycast(orbitingCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+                {
+                    startedSwipeOnCube = true;
+                    //Debug.Log($"Hit a {hit.transform.gameObject}");
+                    //this.cubeHighlighter.transform.position = hit.transform.position;
+                    //this.hitCubeNormal = hit.normal;
 
-            //Vector2 movement = (Input.mousePosition-this.swipeStart);
-            Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-            orbitingCamera.AddMouseInput(mouseDelta);
+                    //this.cubeHighlighter.gameObject.SetActive(true);
+                    this.mouseSwipeStart = Input.mousePosition;
+                    gameManager.CubeSwipeStarted(hit.transform.position, hit.normal);
+                }
+            }
+            if (Input.GetMouseButton(0) && !this.startedSwipeOnCube)
+            {
 
+                //this.mouseSwipeStart = Input.mousePosition;
+
+                //Vector2 movement = (Input.mousePosition-this.swipeStart);
+                Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+                orbitingCamera.AddMouseInput(mouseDelta);
+
+            }
         }
 
         if (Input.touchCount == 1)
@@ -89,9 +112,37 @@ public class InputManager : MonoBehaviour
             orbitingCamera.AddZoomInputPinch(deltaMagnitudeDiff);
         }
 
-        if (Input.GetKeyUp(KeyCode.R))
-        {
-            gameManager.RandomRotation();
-        }
+
     }
+
+    public void DisplayWinScreen(System.TimeSpan timeTaken)
+    {
+        this.ingameUi.ShowWinScreen(timeTaken);
+        this.inputLock++;
+    }
+
+    #region Ui Input
+    public void UI_Undo()
+    {
+        gameManager.UndoLastRotation();
+    }
+
+    public void UI_ShowPauseMenu()
+    {
+        this.ingameUi.ShowPauseMenu();
+        this.inputLock++;
+    }
+
+    public void UI_ClosePauseMenu()
+    {
+        this.ingameUi.ClosePauseMenu();
+        this.inputLock--;
+    }
+
+    public void UI_CloseWinDialog()
+    {
+        this.ingameUi.CloseWinScreen();
+        this.inputLock--;
+    }
+    #endregion
 }

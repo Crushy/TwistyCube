@@ -14,11 +14,28 @@ public class OrbitCamera : MonoBehaviour
 
         public float zoomSpeed;
 
-        public float minZoom,maxZoom;
+        public float minZoom;
+        public float maxZoom;
+    }
+
+    public float MinZoom
+    {
+        get
+        {
+            return cameraSettings.minZoom;
+        }
+    }
+
+    public float MaxZoom
+    {
+        get
+        {
+            return cameraSettings.maxZoom;
+        }
     }
 
     [SerializeField]
-    private CameraSettings cameraSettings = new CameraSettings() {xSpeed=1, ySpeed=1, zoomSpeed=1};
+    private CameraSettings cameraSettings = new CameraSettings() {xSpeed=10, ySpeed=10, zoomSpeed=5, minZoom=9, maxZoom=20};
 
     [SerializeField]
     private Vector3 cameraCentre = Vector3.zero;
@@ -37,7 +54,14 @@ public class OrbitCamera : MonoBehaviour
     //Our target rotation in euler degrees
     private Vector3 targetRotation;
 
-    private float distance = 10f;
+    private float targetDistance = 10f;
+
+    public void SetCameraPosition(float xAngle, float yAngle, float distance)
+    {
+        this.targetRotation.x = xAngle;
+        this.targetRotation.y = yAngle;
+        this.targetDistance = distance;
+    }
 
     public void AddTouchInput(Vector2 input) {
         targetRotation.x += input.x * this.cameraSettings.xSpeed * .05f;
@@ -50,18 +74,18 @@ public class OrbitCamera : MonoBehaviour
     }
 
     public void AddZoomMouseScrollInput(float zoomInput) {
-        distance += zoomInput * this.cameraSettings.zoomSpeed;
+        targetDistance += zoomInput * this.cameraSettings.zoomSpeed;
     }
 
     public void AddZoomInputPinch(float zoomInput) {
-        distance += zoomInput * this.cameraSettings.zoomSpeed * .01f;
+        targetDistance += zoomInput * this.cameraSettings.zoomSpeed * .01f;
     }
 
     // Update is called once per frame
     void LateUpdate()
     {
         //Adjust limits
-        this.distance = Mathf.Clamp( this.distance, this.cameraSettings.minZoom, this.cameraSettings.maxZoom );
+        this.targetDistance = Mathf.Clamp( this.targetDistance, this.cameraSettings.minZoom, this.cameraSettings.maxZoom );
 
         //Free rotation is not allowed to avoid disorientation but that can easily be changed in the future
         targetRotation.y = Mathf.Clamp(targetRotation.y,-89,89);
@@ -72,13 +96,13 @@ public class OrbitCamera : MonoBehaviour
 
     private void UpdateCameraPosition() {
         var targetQuaternion = Quaternion.Euler(-targetRotation.y,targetRotation.x,0);
-        var targetDistance = new Vector3(0.0f, 0.0f, -distance) + cameraCentre;
+        var targetDistanceVector = new Vector3(0.0f, 0.0f, -this.targetDistance) + cameraCentre;
 
         var slerp = Quaternion.SlerpUnclamped(this.transform.rotation, targetQuaternion, Time.deltaTime*4.0f);
-        Vector3 position = slerp * targetDistance;
+        Vector3 position = slerp * targetDistanceVector;
 
         transform.rotation = targetQuaternion;
-        transform.position = targetQuaternion*targetDistance;
+        transform.position = targetQuaternion* targetDistanceVector;
     }
 
     
