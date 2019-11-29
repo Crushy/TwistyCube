@@ -1,6 +1,6 @@
 # TwistyCube
 
-An implementation of a classic Rubik's cube in Unity3D (2019.1.1f1 to be precise). Aimed at mobile and PC.
+An implementation of a classic Rubik's cube in Unity3D (2019.1.1f1 to be precise).
 I've tried to keep everything short, simple and modular (well, as best as I could considering I did it in a week and have a full-time job).
 
 ## Architecture
