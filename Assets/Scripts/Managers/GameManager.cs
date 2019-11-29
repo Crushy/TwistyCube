@@ -72,7 +72,7 @@ public class GameManager : MonoBehaviour
         Application.targetFrameRate = 60;
         Input.simulateMouseWithTouches = true;
 
-        //this.ingameUI.FadeIn();
+        this.ingameUI.FadeIn();
 
         this.cubeHighlighter = GameObject.Instantiate(this.HighlightCubePrefab);
         this.cubeHighlighter.gameObject.SetActive(false);
