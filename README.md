@@ -3,6 +3,8 @@
 An implementation of a classic Rubik's cube in Unity3D (2019.1.1f1 to be precise).
 I've tried to keep everything short, simple and modular (well, as best as I could considering I did it in a week and have a full-time job).
 
+Post-deadline/optional work will be added to separate branches.
+
 ## Architecture
 The gameplay itself is contained in two classes: [MagicCube](../master/Assets/Scripts/Gameplay%20logic/MagicCube.cs) and [GameManager](../master/Assets/Scripts/Managers/GameManager.cs). `GameManager` is responsible for doing most of the underlying interactions betweens systems (namely the [Input Handling](../master/Assets/Scripts/Managers/InputManager.cs) and the [In-game UI](../master/Assets/Scripts/UI/InGameUIController.cs)). `MagicCube` focuses on calculating how to rotate the cube, generate a new game from a set of prefabs and a given size, what configuration counts as a victory and serializing most of the game state (in that particular case, `MagicCube` handles serializing the cube itself, while game manager serializes other game data such as the current timer).
 
