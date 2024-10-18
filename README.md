@@ -1,5 +1,7 @@
 # TwistyCube
 
+[![Demo Video](https://img.youtube.com/vi/qkyrBV_sps0/0.jpg)](https://www.youtube.com/watch?v=qkyrBV_sps0)
+
 An implementation of a classic Rubik's cube in Unity3D (2019.1.1f1 to be precise).
 I've tried to keep everything short, simple and modular (well, as best as I could considering I did it in a week and have a full-time job).
 
